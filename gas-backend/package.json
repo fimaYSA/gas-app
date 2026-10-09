@@ -1,0 +1,19 @@
+{
+  "name": "gas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm rebuild sqlite3 --build-from-source"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "nodemon": "^1.14.10",
+    "sqlite3": "^6.0.1"
+  }
+}
