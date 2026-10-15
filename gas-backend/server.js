@@ -123,6 +123,27 @@ app.post('/api/vote', (req, res) => {
   );
 });
 
+// ==========================================
+// 5. МАРШРУТ: ПОЛУЧИТЬ СПИСОК ВСЕХ ЗАРЕГИСТРИРОВАННЫХ ПОЛЬЗОВАТЕЛЕЙ
+// ==========================================
+app.get('/api/users', (req, res) => {
+  const { schoolId } = req.query; // Можно передать ?schoolId=1, чтобы отфильтровать по конкретной школе
+
+  if (schoolId) {
+    // Если передали ID школы, фильтруем по ней
+    db.all('SELECT id, name, phone, school_id, grade_number, grade_letter, coins, xp FROM users WHERE school_id = ?', [schoolId], (err, rows) => {
+      if (err) return res.status(500).json({ error: "Ошибка базы данных" });
+      res.json(rows);
+    });
+  } else {
+    // Если ничего не передали, выводим вообще ВСЕХ из базы
+    db.all('SELECT id, name, phone, school_id, grade_number, grade_letter, coins, xp FROM users', [], (err, rows) => {
+      if (err) return res.status(500).json({ error: "Ошибка базы данных" });
+      res.json(rows);
+    });
+  }
+});
+
 // Запускаем сервер на порту 3000
 app.listen(PORT, () => {
   console.log(`=== СЕРВЕР АНАЛОГА GAS УСПЕШНО ЗАПУЩЕН ===`);
