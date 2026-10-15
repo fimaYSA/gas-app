@@ -144,6 +144,56 @@ app.get('/api/users', (req, res) => {
   }
 });
 
+// ==========================================
+// 6. МАРШРУТ: ПОЛУЧИТЬ ЛИЧНЫЙ ПРОФИЛЬ И ТРОФЕИ ЮЗЕРА
+// ==========================================
+app.get('/api/profile', (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: "Не указан userId" });
+
+  // 1. Берем данные юзера
+  db.get('SELECT * FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err || !user) return res.status(404).json({ error: "Пользователь не найден" });
+
+    // 2. Берем его открытые трофеи
+    const trophiesSql = `
+      SELECT t.title, t.description, t.icon, ut.unlocked_at 
+      FROM user_trophies ut
+      JOIN trophies t ON ut.trophy_id = t.id
+      WHERE ut.user_id = ?
+    `;
+    db.all(trophiesSql, [userId], (err, trophies) => {
+      res.json({
+        user: user,
+        trophies: trophies || []
+      });
+    });
+  });
+});
+
+// ==========================================
+// 7. МАРШРУТ: ПОЛУЧИТЬ ВХОДЯЩИЕ ГОЛОСА (КТО ЗА МЕНЯ ГОЛОСОВАЛ)
+// ==========================================
+app.get('/api/inbox', (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: "Не указан userId" });
+
+  const inboxSql = `
+    SELECT pr.id, pq.question_text, pq.icon, u.grade_number, u.grade_letter, pr.created_at
+    FROM poll_results pr
+    JOIN poll_questions pq ON pr.question_id = pq.id
+    JOIN users u ON pr.sender_id = u.id
+    WHERE pr.receiver_id = ?
+    ORDER BY pr.created_at DESC
+  `;
+
+  db.all(inboxSql, [userId], (err, rows) => {
+    if (err) return res.status(500).json({ error: "Ошибка базы данных" });
+    res.json(rows); // Возвращает список комплиментов: "Кто-то из 9-А класса считает, что ты..."
+  });
+});
+
+
 // Запускаем сервер на порту 3000
 app.listen(PORT, () => {
   console.log(`=== СЕРВЕР АНАЛОГА GAS УСПЕШНО ЗАПУЩЕН ===`);
